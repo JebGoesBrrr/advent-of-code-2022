@@ -6,10 +6,8 @@ let Priority c =
 [<EntryPoint>]
 let main args =
     
-    let lines =
-        args.[0]
-        |> System.IO.File.ReadAllLines
-    
+    let lines = System.IO.File.ReadAllLines args.[0]  
+
     lines
     |> Seq.map (Seq.splitInto 2)
     |> Seq.map (Seq.map Set.ofSeq)
