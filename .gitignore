@@ -1,0 +1,5 @@
+.vscode
+*.fsproj
+bin/
+app/
+obj/
