@@ -21,25 +21,27 @@ let NoGoSet y s = seq {
     }
 
 let rec SquareSolution origin size sensors =
-    printfn "%A" (origin, size)
-    
+
     let a = origin
-    let b = { x=origin.x+size.x; y=origin.y }
-    let c = { x=origin.x; y=origin.y+size.y }
-    let d = { x=origin.x+size.x; y=origin.y+size.y }
+    let b = { x=origin.x+size.x-1; y=origin.y }
+    let c = { x=origin.x; y=origin.y+size.y-1 }
+    let d = { x=origin.x+size.x-1; y=origin.y+size.y-1 }
 
     let TestPoint p s = Dist s.pos p <= s.dist
     let TestSquare s = TestPoint a s && TestPoint b s && TestPoint c s && TestPoint d s
 
     if sensors |> Seq.map TestSquare |> Seq.contains true then
         []
-    elif size.x = 1 && size.y = 1 then
-        [ origin ]
+    elif size.x <= 1 && size.y <= 1 then
+        if sensors |> Seq.map (TestPoint origin) |> Seq.contains true then
+            []
+        else
+            [ origin ]
     else
-        let a, asize = origin, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }
-        let b, bsize = {x=origin.x; y=origin.y+size.y/2}, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }
-        let c, csize = {x=origin.x+size.x/2; y=origin.y}, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }
-        let d, dsize = {x=origin.x+size.x/2; y=origin.y+size.y/2}, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }    
+        let a, asize = origin, { x=size.x/2; y=size.y/2 }
+        let b, bsize = {x=origin.x; y=origin.y+size.y/2}, { x=size.x/2; y=size.y-size.y/2 }
+        let c, csize = {x=origin.x+size.x/2; y=origin.y}, { x=size.x-size.x/2; y=size.y/2 }
+        let d, dsize = {x=origin.x+size.x/2; y=origin.y+size.y/2}, { x=size.x-size.x/2; y=size.y-size.y/2 }    
         (SquareSolution a asize sensors) @
         (SquareSolution b bsize sensors) @
         (SquareSolution c csize sensors) @
@@ -50,13 +52,15 @@ let rec SquareSolution origin size sensors =
 let main args =
 
     let yLine   = args.[0] |> int
-    let sensors = args.[1] |> System.IO.File.ReadAllLines |> Array.map ParseLine
+    let size    = args.[1] |> int
+    let sensors = args.[2] |> System.IO.File.ReadAllLines |> Array.map ParseLine
 
     let noGoSet = sensors |> Seq.collect (NoGoSet yLine) |> Seq.filter (fun p -> p.y = yLine) |> Set.ofSeq
     let beaconsAt = sensors |> Seq.map (fun s -> s.beacon) |> Seq.filter (fun p -> p.y = yLine) |> Set.ofSeq
 
     printfn "Part 1: %A" (noGoSet.Count - beaconsAt.Count)
 
-    printfn "Part 2; %A" ((SquareSolution {x=0;y=0} {x=20;y=20} sensors) |> Set.ofSeq)
+    let p = (SquareSolution {x=0;y=0} {x=size+1;y=size+1} sensors) |> Set.ofSeq |> Set.minElement
+    printfn "Part 2: %A"  ((int64 p.x) * 4000000L + (int64 p.y))
 
     0
