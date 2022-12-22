@@ -13,11 +13,11 @@ let ParseLine line =
     let p, b = { x=a.[0]; y=a.[1] }, { x=a.[2]; y=a.[3] }
     { pos = p; beacon = b; dist = Dist p b }
 
-let NoGoSet s = seq {
-    for x in s.pos.x-s.dist .. s.pos.x+s.dist do
-        for y in s.pos.y-s.dist .. s.pos.y+s.dist do
-            let p = { x=x; y=y }
-            if (Dist p s.pos) <= s.dist then yield p
+let NoGoSet y s = seq {
+    let d = (max 0 (s.dist-(abs s.pos.y-y)))
+    for x in s.pos.x-d .. s.pos.x+d do
+        let p = { x=x; y=y }
+        if (Dist p s.pos) <= s.dist then yield p
     }
 
 [<EntryPoint>]
@@ -26,7 +26,7 @@ let main args =
     let yLine   = args.[0] |> int
     let sensors = args.[1] |> System.IO.File.ReadAllLines |> Array.map ParseLine
 
-    let noGoSet = sensors |> Seq.collect NoGoSet |> Seq.filter (fun p -> p.y = yLine) |> Set.ofSeq
+    let noGoSet = sensors |> Seq.collect (NoGoSet yLine) |> Seq.filter (fun p -> p.y = yLine) |> Set.ofSeq
     let beaconsAt = sensors |> Seq.map (fun s -> s.beacon) |> Seq.filter (fun p -> p.y = yLine) |> Set.ofSeq
 
     printfn "Part 1: %A" (noGoSet.Count - beaconsAt.Count)
