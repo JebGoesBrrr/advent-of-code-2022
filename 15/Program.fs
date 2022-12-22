@@ -20,6 +20,32 @@ let NoGoSet y s = seq {
         if (Dist p s.pos) <= s.dist then yield p
     }
 
+let rec SquareSolution origin size sensors =
+    printfn "%A" (origin, size)
+    
+    let a = origin
+    let b = { x=origin.x+size.x; y=origin.y }
+    let c = { x=origin.x; y=origin.y+size.y }
+    let d = { x=origin.x+size.x; y=origin.y+size.y }
+
+    let TestPoint p s = Dist s.pos p <= s.dist
+    let TestSquare s = TestPoint a s && TestPoint b s && TestPoint c s && TestPoint d s
+
+    if sensors |> Seq.map TestSquare |> Seq.contains true then
+        []
+    elif size.x = 1 && size.y = 1 then
+        [ origin ]
+    else
+        let a, asize = origin, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }
+        let b, bsize = {x=origin.x; y=origin.y+size.y/2}, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }
+        let c, csize = {x=origin.x+size.x/2; y=origin.y}, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }
+        let d, dsize = {x=origin.x+size.x/2; y=origin.y+size.y/2}, { x=size.x/2+size.x%2; y=size.y/2+size.y%2 }    
+        (SquareSolution a asize sensors) @
+        (SquareSolution b bsize sensors) @
+        (SquareSolution c csize sensors) @
+        (SquareSolution d dsize sensors)
+
+
 [<EntryPoint>]
 let main args =
 
@@ -30,5 +56,7 @@ let main args =
     let beaconsAt = sensors |> Seq.map (fun s -> s.beacon) |> Seq.filter (fun p -> p.y = yLine) |> Set.ofSeq
 
     printfn "Part 1: %A" (noGoSet.Count - beaconsAt.Count)
+
+    printfn "Part 2; %A" ((SquareSolution {x=0;y=0} {x=20;y=20} sensors) |> Set.ofSeq)
 
     0
